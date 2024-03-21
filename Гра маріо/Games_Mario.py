@@ -46,9 +46,13 @@ class Mario(GameSprite):
 
                 if self.jumpCount < 0:
                     self.rect.y += (self.jumpCount ** 2) / 2
+                
+                
+                elif sprite.collide_rect(mario, plat):
+                    pass
+                
                 else:
-                    if not sprite.collide_rect(mario, platforms):
-                        self.rect.y -= (self.jumpCount ** 2) / 2
+                    self.rect.y -= (self.jumpCount ** 2) / 2
 
                 self.jumpCount -= 2
 
