@@ -47,10 +47,6 @@ class Mario(GameSprite):
                 if self.jumpCount < 0:
                     self.rect.y += (self.jumpCount ** 2) / 2
                 
-                
-                elif sprite.collide_rect(mario, plat):
-                    pass
-                
                 else:
                     self.rect.y -= (self.jumpCount ** 2) / 2
 
@@ -58,9 +54,11 @@ class Mario(GameSprite):
 
             else:
                 self.isJump = False
-                self.jumpCount = 12     
-        
-        
+                self.jumpCount = 12 
+                
+    def fire(self):
+        bullet = Bullet(self.rect.centerx, self.rect.top, 15, 20, 15, 'fire.png')
+        bullets.add(bullet)                  
         
 class Enemy_1(GameSprite):
     direction = 'left'
@@ -79,64 +77,108 @@ class Tube(GameSprite):
     def update(self):
         None    
 
-class Platform(GameSprite):
+class Enemy(GameSprite):
     def update(self):
-        None    
+        self.rect.x += self.speed
+        global lost
+        if self.rect.y>win_width:
+            self.rect.y=0
+            self.rect.x=randint(0, win_width-80)
+            lost = lost + 1
+            print(lost)
+    
 
- 
-        
+class Bullet(GameSprite):
+    def update(self):
+        self.rect.x += self.speed
+        if self.rect.x < 0:
+            self.kill()
+b1 = Bullet(50, 50, 15, 20, 1, 'fire.png' )           
+    
+   
+
+bullets = sprite.Group()
+
+monsters = sprite.Group()
+for i in range(5):
+    mon = Enemy(randint(0, win_width-80), 0, 80, 50, randint(1, 5), 'enemy.png')
+    monsters.add(mon)
+    
 background = scale(load('background.png'), (win_width, win_height))
-mario = Mario(50, 50, 50, 380, 5, 'Mario.png')
+mario = Mario(50, 50, 80, 380, 4, 'Mario.png')
 trube = Tube(50, 50, 50, 380, 0, "tube.png")
-monster = Enemy_1(50, 50, 150, 380, 5, "enemy.png")
-platform1 = Platform(50, 50, 50, 300, 0, "platform.png")
-platform2 = Platform(50, 50, 90, 300, 0, "platform.png")
-platform3 = Platform(50, 50, 130, 300, 0, "platform.png")
-platform4 = Platform(50, 50, 170, 300, 0, "platform.png")
-platform5 = Platform(50, 50, 210, 300, 0, "platform.png")
-platforms = sprite.Group()
-platforms.add(platform1)
-platforms.add(platform2)
-platforms.add(platform3)
-platforms.add(platform4)
-platforms.add(platform5)
+
+font.init()
+font1 = font.SysFont('Arial', 36)
+
+font2 = font.SysFont('Arial', 80)
+txt_lose_game = font2.render('Ти програв!!!!', True, (255, 0, 0))
+txt_win_game = font2.render('Ти виграв!!!!', True, (0, 255, 0))
 
 clock = time.Clock()
 FPS = 60
-
+lost = 0
+score = 0
 Game = True
 finish = False
 while Game:
     for e in event.get():
         if e.type == QUIT:
             Game = False
+        if e.type == KEYDOWN:
+            if e.key == K_x:
+               mario.fire()     
     keys = key.get_pressed()   
 
     if not finish:
         window.blit(background, (0, 0))
         
-        for plat in platforms:
-            plat.reset()
+        txt_lose = font1.render(f'Пропущено: {lost}', True, (255,255,255))
+        window.blit(txt_lose, (10, 50))
+        
+        txt_win = font1.render(f'Рахунок: {score}', True, (255,255,255))
+        window.blit(txt_win, (10, 10))
+        
+        monsters.draw(window)
+        monsters.update()    
             
-        if sprite.collide_rect(mario, monster):    
-            finish = True
-   
-        
-        
-        
-        
-        
-        trube.reset()
-        trube.update()
-        
-        monster.reset()
-        monster.update()
-
-        mario.reset()
+        bullets.draw(window)
+        bullets.update()            
+            
+        mario.reset()    
         mario.update()
-
+        
+        
+        if sprite.spritecollide(mario, monsters, False):
+            finish = True
+            window.blit(txt_lose_game, (200, 200))
+        
+        
+        collides = sprite.groupcollide(monsters, bullets, True, True)
+        for c in collides:
+            mon = Enemy(randint(0, win_width-80), 0, 80, 50, randint(1, 5), 'enemy.png')
+            monsters.add(mon) 
+            score = score + 1
+            
+        if score == 10:
+            finish = True
+            window.blit(txt_win_game, (200, 200))
     
-      
+    else:
+        finish = False
+        score = 0
+        lost = 0
+       
+        for b in bullets:
+            b.kill()
+            
+        for m in monsters:
+            m.kill()
+         
+        time.delay(3000)
+        for i in range(5):
+            mon = Enemy(randint(0, win_width-80), 0, 80, 50, randint(1, 5), 'enemy.png')
+            monsters.add(mon)
 
 
 
